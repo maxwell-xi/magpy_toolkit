@@ -288,6 +288,68 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
 
+def mimic_old_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 29.5]):    
+    i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
+    j_center = np.argwhere(grid_mm[1] == probe_center_loc_mm[1])[0,0]
+    k_center = np.argwhere(grid_mm[2] == probe_center_loc_mm[2])[0,0]
+    ht_center_true = field[3][i_center, j_center, k_center]
+    
+    k_tip = k_center - 59  # 59 grid lines corresponds to 29.5 mm
+    ht_tip_true = field[3][i_center, j_center, k_tip]
+    
+    i_plus = i_center + 20; i_minus = i_center - 20
+    j_plus = j_center + 20; j_minus = j_center - 20
+    k_top = k_center + 20; k_bottom = k_center - 20    
+  
+    ht_tip_true = field[3][i_center, j_center, k_tip]
+        
+    i_sensor = [i_plus, i_minus, i_minus, i_plus, i_plus, i_minus, i_minus, i_plus]
+    j_sensor = [j_plus, j_plus, j_minus, j_minus, j_plus, j_plus, j_minus, j_minus]
+    k_sensor = [k_bottom, k_bottom, k_bottom, k_bottom, k_top, k_top, k_top, k_top]
+    
+    hx_sensor = []; hy_sensor = []; hz_sensor = []; ht_sensor = []
+    for n in np.arange(8):
+        hx_sensor.append(field[0][i_sensor[n], j_sensor[n], k_sensor[n]])
+        hy_sensor.append(field[1][i_sensor[n], j_sensor[n], k_sensor[n]])
+        hz_sensor.append(field[2][i_sensor[n], j_sensor[n], k_sensor[n]])
+        ht_sensor.append(field[3][i_sensor[n], j_sensor[n], k_sensor[n]])
+        
+    hx_center = np.mean(hx_sensor); hy_center = np.mean(hy_sensor); hz_center = np.mean(hz_sensor); ht_center = np.mean(ht_sensor)
+    ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
+    h_center = [hx_center, hy_center, hz_center, ht_center_combined]
+    h_center_rms = [x/np.sqrt(2) for x in h_center]
+    ht_center_error = 20*np.log10(ht_center_combined / ht_center_true)
+    
+    gz_1 = (ht_sensor[0] - ht_sensor[4]) / 20e-3 
+    gz_2 = (ht_sensor[1] - ht_sensor[5]) / 20e-3
+    gz_3 = (ht_sensor[2] - ht_sensor[6]) / 20e-3
+    gz_4 = (ht_sensor[3] - ht_sensor[7]) / 20e-3
+    
+    gz_n_center = np.mean([gz_1, gz_2, gz_3, gz_4]) / ht_center
+    
+    gx_1 = (ht_sensor[1] - ht_sensor[0]) / 20e-3 
+    gx_2 = (ht_sensor[5] - ht_sensor[4]) / 20e-3
+    gx_3 = (ht_sensor[6] - ht_sensor[7]) / 20e-3
+    gx_4 = (ht_sensor[2] - ht_sensor[3]) / 20e-3
+    
+    gx_n_center = np.mean([gx_1, gx_2, gx_3, gx_4]) / ht_center
+    
+    gy_1 = (ht_sensor[3] - ht_sensor[0]) / 20e-3 
+    gy_2 = (ht_sensor[7] - ht_sensor[4]) / 20e-3
+    gy_3 = (ht_sensor[6] - ht_sensor[5]) / 20e-3
+    gy_4 = (ht_sensor[2] - ht_sensor[1]) / 20e-3
+    
+    gy_n_center = np.mean([gy_1, gy_2, gy_3, gy_4]) / ht_center
+    
+    gt_n_center = np.sqrt(gx_n_center**2 + gy_n_center**2 + gz_n_center**2)
+    g_n_center = [gx_n_center, gy_n_center, gz_n_center, gt_n_center]        
+    
+    ht_tip = ht_center_combined * np.exp(2*gz_n_center*29.5e-3)
+    ht_tip_rms = ht_tip/np.sqrt(2)
+    
+    ht_tip_error = 20*np.log10(ht_tip / ht_tip_true) 
+    
+    return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
     
 def mimic_magpy_probe_with_sensor_avg(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):    
     i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
