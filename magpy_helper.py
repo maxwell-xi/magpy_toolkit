@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from data_visualization_and_processing import helper
+import glob
+import os
+import zipfile
 
 def search_spectrum_peaks(spectra_df, quantity='h_field', max_value_used=True, low_freq_truncated=True, high_freq_truncated=True, output_rounded=True):
     # remove artificial high fields at the low and high frequency ends
@@ -452,3 +455,20 @@ def mimic_magpy_probe_with_sensor_avg(field, grid_mm, probe_center_loc_mm = [0, 
     ht_tip_error = [ht_tip_error_1, ht_tip_error_2]    
     
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error  
+    
+# find files whose names meet the specified pattern under the specified directory
+def get_files(file_dir, file_pattern):
+    full_pattern = os.path.join(file_dir, file_pattern)
+    files = glob.glob(full_pattern)
+    files.sort()
+    
+    return files
+
+# extract compressed files whose names start with the specified string to the specified directory
+# if out_path does not exist, it will be created first 
+def extract_zip_files(zip_files, file_header, out_dir):
+    for zip_file in zip_files:
+        with zipfile.ZipFile(zip_file) as archive:
+            for file in archive.namelist():
+                if file.startswith(file_header):
+                    archive.extract(file, out_dir)
