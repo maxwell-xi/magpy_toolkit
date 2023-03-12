@@ -1,6 +1,25 @@
 import scipy
 import numpy as np
 
+def determine_amplitude_spectrum(signal, sample_rate, window='hann'):
+    if window == 'hann':
+        signal_windowed = signal * scipy.signal.windows.hann(len(signal))
+    elif window == 'hamming':
+        signal_windowed = signal * scipy.signal.windows.hamming(len(signal))
+    elif window == 'blackman':
+        signal_windowed = signal * scipy.signal.windows.blackman(len(signal))
+    elif window == 'flattop':
+        signal_windowed = signal * scipy.signal.windows.flattop(len(signal))
+    elif window == 'rectangular':
+        signal_windowed = signal
+    else:
+        print('Undefined window!')
+    
+    spectrum = 2/len(signal_windowed) * np.abs(np.fft.fft(signal_windowed))[:len(signal_windowed)//2]
+    freq = np.fft.fftfreq(len(signal_windowed), 1/sample_rate)[:len(signal_windowed)//2]
+
+    return spectrum, freq
+
 # func from Peter
 def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
     window = scipy.signal.windows.hamming(len(signal))  
@@ -32,7 +51,7 @@ def determine_amplitude_at_freq_dft_2(signal, freq, sample_rate):
     return amplitude
 
 # Note: zero padding will raise the noise floor, so usually is only used to detect the dominant frequency
-def determine_peak_freq(signal, sample_rate, padding=3, interpolated=True):
+def determine_peak_freq(signal, sample_rate, padding=5, interpolated=True):
     signal = np.array(signal - np.mean(signal)) # remove DC
     
     sample_num = len(signal)
