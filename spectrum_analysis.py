@@ -1,21 +1,26 @@
 import scipy
 import numpy as np
 
-def determine_amplitude_spectrum(signal, sample_rate, window='hann'):
+def determine_amplitude_spectrum(signal, sample_rate, window='hann', acf_applied=False):
     if window == 'hann':
         signal_windowed = signal * scipy.signal.windows.hann(len(signal))
+        acf = len(signal) / sum(scipy.signal.windows.hann(len(signal))) if acf_applied else 1
     elif window == 'hamming':
         signal_windowed = signal * scipy.signal.windows.hamming(len(signal))
+        acf = len(signal) / sum(scipy.signal.windows.hamming(len(signal))) if acf_applied else 1
     elif window == 'blackman':
         signal_windowed = signal * scipy.signal.windows.blackman(len(signal))
+        acf = len(signal) / sum(scipy.signal.windows.blackman(len(signal))) if acf_applied else 1
     elif window == 'flattop':
         signal_windowed = signal * scipy.signal.windows.flattop(len(signal))
+        acf = len(signal) / sum(scipy.signal.windows.flattop(len(signal))) if acf_applied else 1
     elif window == 'rectangular':
         signal_windowed = signal
+        acf = 1
     else:
         print('Undefined window!')
     
-    spectrum = 2/len(signal_windowed) * np.abs(np.fft.fft(signal_windowed))[:len(signal_windowed)//2]
+    spectrum = acf * 2/len(signal_windowed) * np.abs(np.fft.fft(signal_windowed))[:len(signal_windowed)//2]
     freq = np.fft.fftfreq(len(signal_windowed), 1/sample_rate)[:len(signal_windowed)//2]
 
     return spectrum, freq
