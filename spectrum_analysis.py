@@ -31,7 +31,7 @@ def determine_complex_spectrum(signal, sample_rate):
     freq = np.fft.fftfreq(len(signal), 1/sample_rate)[:len(signal)//2]
     spectrum_amplitude = np.abs(spectrum)
     spectrum_angle = np.angle(spectrum, deg=True)
-    return spectrum_amplitude, spectrum_angle
+    return spectrum_amplitude, spectrum_angle, freq
 
 # func from Peter
 def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
