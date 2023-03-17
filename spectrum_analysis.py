@@ -1,6 +1,7 @@
 import scipy
 import numpy as np
 
+# https://ch.mathworks.com/matlabcentral/answers/372516-calculate-windowing-correction-factor
 def determine_amplitude_spectrum(signal, sample_rate, window='hann', acf_applied=False):
     if window == 'hann':
         signal_windowed = signal * scipy.signal.windows.hann(len(signal))
@@ -39,7 +40,7 @@ def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
     return amplitude
 
 # func from Peter
-def determine_amplitude_at_freq_dft(signal, freq, sample_rate):  # fail for the signal from Bosch hob!
+def determine_amplitude_at_freq_dft(signal, freq, sample_rate):  # bascially the sine/cosine implementation of DFT; fail for the signal from Bosch hob!
     t = np.arange(0, len(signal)) / sample_rate
     test_1 = np.sin(2*np.pi * freq * t)
     test_2 = np.sin(2*np.pi * freq * t + np.pi/2)
@@ -98,3 +99,11 @@ def quadratic_interpolation(ym1, y0, yp1):
     y = y0 - 0.25*(ym1-yp1)*p;
     a = 0.5*(ym1 - 2*y0 + yp1);
     return p, y, a  
+
+def determine_complex_spectrum_at_freq(signal, freq, sample_rate):
+    correlation_vector = np.arange(0, len(signal))
+    correlation_vector = signal*np.exp(correlation_vector*-1j*2*np.pi/sample_rate*freq)
+    complex_spectrum =  2/len(signal) * np.sum(correlation_vector) 
+    amplitude = np.abs(complex_spectrum)
+    angle_deg = np.angle(complex_spectrum, deg=True)
+    return amplitude, angle_deg
