@@ -26,6 +26,13 @@ def determine_amplitude_spectrum(signal, sample_rate, window='hann', acf_applied
 
     return spectrum, freq
 
+def determine_complex_spectrum(signal, sample_rate):
+    spectrum = 2/len(signal) * np.fft.fft(signal)[:len(signal)//2] 
+    freq = np.fft.fftfreq(len(signal), 1/sample_rate)[:len(signal)//2]
+    spectrum_amplitude = np.abs(spectrum)
+    spectrum_angle = np.angle(spectrum, deg=True)
+    return spectrum_amplitude, spectrum_angle
+
 # func from Peter
 def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
     window = scipy.signal.windows.hamming(len(signal))  
