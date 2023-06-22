@@ -26,12 +26,6 @@ def determine_amplitude_spectrum(signal, sample_rate, window='hann', acf_applied
 
     return spectrum, freq
 
-def determine_complex_spectrum(signal, sample_rate):
-    spectrum = 2/len(signal) * np.fft.fft(signal)[:len(signal)//2] 
-    freq = np.fft.fftfreq(len(signal), 1/sample_rate)[:len(signal)//2]
-    spectrum_amplitude = np.abs(spectrum)
-    spectrum_angle = np.angle(spectrum, deg=True)
-    return spectrum_amplitude, spectrum_angle, freq
 
 # func from Peter
 def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
@@ -46,6 +40,7 @@ def determine_amplitude_at_freq_sumsq(signal, freq, sample_rate):
     amplitude = np.sqrt(2*np.dot(normalization*slice, normalization*slice) / len(signal))
     return amplitude
 
+
 # func from Peter
 def determine_amplitude_at_freq_dft(signal, freq, sample_rate):  # bascially the sine/cosine implementation of DFT; fail for the signal from Bosch hob!
     t = np.arange(0, len(signal)) / sample_rate
@@ -56,12 +51,14 @@ def determine_amplitude_at_freq_dft(signal, freq, sample_rate):  # bascially the
     amplitude = 2/len(signal) * np.hypot(v_1, v_2) 
     return amplitude
 
+
 # func from Mischa
 def determine_amplitude_at_freq_dft_2(signal, freq, sample_rate):
     correlation_vector = np.arange(0, len(signal))
     correlation_vector = signal*np.exp(correlation_vector*-1j*2*np.pi/sample_rate*freq)
     amplitude =  2/len(signal) * np.abs(np.sum(correlation_vector)) 
     return amplitude
+
 
 # Note: zero padding will raise the noise floor, so usually is only used to detect the dominant frequency
 def determine_peak_freq(signal, sample_rate, padding=5, interpolated=True):
@@ -92,6 +89,7 @@ def determine_peak_freq(signal, sample_rate, padding=5, interpolated=True):
 
     return peak_freq, spectrum_padded, freq_padded
 
+
 def quadratic_interpolation(ym1, y0, yp1):
     #QINT - quadratic interpolation of three adjacent samples
     #
@@ -107,6 +105,16 @@ def quadratic_interpolation(ym1, y0, yp1):
     a = 0.5*(ym1 - 2*y0 + yp1);
     return p, y, a  
 
+
+def determine_complex_spectrum(signal, sample_rate):
+    spectrum = 2/len(signal) * np.fft.fft(signal)[:len(signal)//2] 
+    freq = np.fft.fftfreq(len(signal), 1/sample_rate)[:len(signal)//2]
+    spectrum_amplitude = np.abs(spectrum)
+    spectrum_angle = np.angle(spectrum, deg=True) # return angles in (-180 deg, 180 deg]
+    return spectrum_amplitude, spectrum_angle, freq
+
+
+# extended version of determine_amplitude_at_freq_dft_2()
 def determine_complex_spectrum_at_freq(signal, freq, sample_rate):
     correlation_vector = np.arange(0, len(signal))
     correlation_vector = signal*np.exp(correlation_vector*-1j*2*np.pi/sample_rate*freq)
