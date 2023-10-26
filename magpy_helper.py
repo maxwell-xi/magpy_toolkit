@@ -205,27 +205,38 @@ def multi_frequency_compliance_evaluation(input_df, quantity='h_field', max_valu
     
     return exposure_ratio
     
-def extrapolation_factor_fitted(g_n):
-    coeff = np.array([1, 1, -1.04, 11.0, -31.7, 45.9, -32.2, 8.95])
+def extrapolation_factor_fitted(g_n, local_field_at_probe_tip=True):
+    #coeff = np.array([1, 1, -1.04, 11.0, -31.7, 45.9, -32.2, 8.95]) # derived based on 1 cm2 avg. total field at probe tip with least square method
+    coeff_avg = np.array([1, 1, -1.01, 15.9, -50.8, 74.7, -51.4, 13.7]) # derived based on 1 cm2 avg. total field at probe tip with 97.5th percentile quantile regression 
+    coeff_local = np.array([1, 1, -0.764, 14.5, -47.7, 70.7, -48.7, 13.1]) # derived based on local total field at probe tip with 97.5th percentile quantile regression
     g_d_product = g_n * 18.5e-3
     item = np.array([1, g_d_product, g_d_product**2, g_d_product**3, g_d_product**4, g_d_product**5, g_d_product**6, g_d_product**7])
-    extrap_factor = np.sum(coeff * item)
+
+    if local_field_at_probe_tip == True:
+        extrap_factor = np.sum(coeff_local * item)
+    else:
+        extrap_factor = np.sum(coeff_avg * item)
     
     return extrap_factor
 
-def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):    
+def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]): 
+    '''
+    INPUT: field data (incl. x-, y-, z-components and the total field), the corresponding grid, and the coordinates of the probe center
+    OUTPUT: field readings at the probe center and the probe tip, following the implementation of MAGPy V2.x 
+    '''  
     i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
     j_center = np.argwhere(grid_mm[1] == probe_center_loc_mm[1])[0,0]
     k_center = np.argwhere(grid_mm[2] == probe_center_loc_mm[2])[0,0]
-    ht_center_true = field[3][i_center, j_center, k_center]
+    ht_center_true = field[3][i_center, j_center, k_center] # total local H-field at the probe center with the indices (i_center, j_center, k_center)
     
     k_tip = k_center - 37  # 37 grid lines corresponds to 18.5 mm
-    ht_tip_true = field[3][i_center, j_center, k_tip]
+    ht_tip_true = field[3][i_center, j_center, k_tip] # total local H-field at the probe tip which is 18.5 mm below the probe center
     
     i_plus = i_center + 22; i_minus = i_center - 22
     j_plus = j_center + 22; j_minus = j_center - 22
     k_top = k_center + 22; k_bottom = k_center - 22    
   
+    # total local H-field at the four points which are the intersects of the four vertical edges of the sensor cube and the probe surface
     ht_tip_true_1 = field[3][i_plus, j_plus, k_tip]
     ht_tip_true_2 = field[3][i_minus, j_plus, k_tip]
     ht_tip_true_3 = field[3][i_minus, j_minus, k_tip]
@@ -241,7 +252,8 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
         hy_sensor.append(field[1][i_sensor[n], j_sensor[n], k_sensor[n]])
         hz_sensor.append(field[2][i_sensor[n], j_sensor[n], k_sensor[n]])
         ht_sensor.append(field[3][i_sensor[n], j_sensor[n], k_sensor[n]])
-        
+
+    # H-fields at the probe center, averaged over 8 sensors    
     hx_center = np.mean(hx_sensor); hy_center = np.mean(hy_sensor); hz_center = np.mean(hz_sensor); ht_center = np.mean(ht_sensor)
     ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
     h_center = [hx_center, hy_center, hz_center, ht_center_combined]
@@ -278,6 +290,8 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
   
     gz_n_1 = gz_1 / ht_mid_1; gz_n_2 = gz_2 / ht_mid_2; gz_n_3 = gz_3 / ht_mid_3; gz_n_4 = gz_4 / ht_mid_4     
     
+    # total H-fields at the four points which are the intersects of the four vertical edges of the sensor cube and the probe surface
+    # obtained from field extrapolation
     ht_tip_1 = ht_mid_1 * extrapolation_factor_fitted(gz_n_1)
     ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
     ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
