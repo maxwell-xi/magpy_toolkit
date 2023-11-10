@@ -844,10 +844,10 @@ def sc6_einc_thermal_trace(exposure_scenario='public'):
 # the same as HC SC6-2015, so no additional implementation was made here.
 
 # source 1: table 1 of FCC Docket 19-126 released on Apr. 6, 2020 (valid down to 300 kHz)
-# source 2: KDB 680106, released on Oct. 24, 2023 (providing RL below 300 kHz, only for general public exposure)
+# source 2: KDB 680106, released on Oct. 24, 2023 (providing RL below 300 kHz, for both general public and occupational exposures?)
 def fcc_hinc(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
-        if f < 3e3:
+        if f < 3e3: # assume the limit valid down to 3 kHz
             hinc = float('nan')
         elif f < 100e3:
             hinc = 90
@@ -858,10 +858,12 @@ def fcc_hinc(f, exposure_scenario='public'):
         else:
             hinc = float('nan')
     else:
-        if f < 0.3e6:
+        if f < 3e3:
             hinc = float('nan')
+        elif f < 100e3:
+            hinc = 90 # assume the same limit as general public exposure
         elif f <= 3e6:
-            hinc = 1.63
+            hinc = 1.63 # assume the same limit as general public exposure
         elif f <= 30e6:
             hinc = 4.89 / (f*1e-6) # valid up to 30 MHz
         else:
@@ -871,7 +873,7 @@ def fcc_hinc(f, exposure_scenario='public'):
 
 def fcc_einc(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
-        if f < 3e3:
+        if f < 3e3: # assume the limit valid down to 3 kHz
             einc = float('nan')
         elif f < 100e3:
             einc = 83
@@ -882,10 +884,12 @@ def fcc_einc(f, exposure_scenario='public'):
         else:
             einc = float('nan')
     else:
-        if f < 0.3e6:
+        if f < 3e3:
             einc = float('nan')
+        elif f < 100e3:
+            einc = 83 # assume the same limit as general public exposure
         elif f < 3e6:
-            einc = 614
+            einc = 614 # assume the same limit as general public exposure
         elif f < 30e6:
             einc = 1842 / (f*1e-6) # valid up to 30 MHz
         else:
@@ -898,8 +902,8 @@ def fcc_hinc_trace(exposure_scenario='public'):
         f = [3e3, 100e3, 100e3, 1.34e6, 30e6]
         hinc = [90, 90, 1.63, 1.63, 2.19/30]
     else:
-        f = [100e3, 3e6, 30e6]
-        hinc = [1.63, 1.63, 4.89/30]
+        f = [3e3, 100e3, 100e3, 3e6, 30e6]
+        hinc = [90, 90, 1.63, 1.63, 4.89/30] # limits below 300 kHz assumed to the same as general public exposure
     
     return f, hinc
 
@@ -908,8 +912,8 @@ def fcc_einc_trace(exposure_scenario='public'):
         f = [3e3, 100e3, 100e3, 1.34e6, 30e6]
         einc = [83, 83, 614, 614, 824/30]
     else:
-        f = [100e3, 3e6, 30e6]
-        einc = [614, 614, 1842/30]
+        f = [3e3, 100e3, 100e3, 3e6, 30e6] 
+        einc = [83, 83, 614, 614, 1842/30] # limits below 300 kHz assumed to the same as general public exposure
     
     return f, einc
 
