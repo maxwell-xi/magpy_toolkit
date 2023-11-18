@@ -584,7 +584,6 @@ def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m
         envelope = np.abs((1/(mod_index+1)) * (signal.square(2*np.pi*f_m*t, duty=duty_cycle) + mod_index))
         if ramp_applied == True:
             ramp_up_index = np.insert(np.where( np.isclose(np.diff(envelope), (1-(1-mod_index)/(mod_index+1))) )[0] + 1, 0, 0)
-            print(ramp_up_index)
             ramp_down_index = np.where( np.isclose(np.diff(envelope), ((1-mod_index)/(mod_index+1)-1)) )[0]
             ramp_samples = int(ramp_time_rel*(0.5/f_m)*f_s)            
             window = signal.windows.gaussian(ramp_samples*2, std=ramp_samples/3)
