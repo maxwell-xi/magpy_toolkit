@@ -553,3 +553,54 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
             right_pos += 1
             right_count += 1
     return left_pos, right_pos
+
+
+def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m=1e2, mod_index=1, envelope_shape='square', duty_cycle=0.5, ramp_applied=True, ramp_time_rel=0.2, noise_added=False, snr_db=30):
+    '''    
+    ---global param
+    f_s: sample rate
+    duration: how long the signal is along the time axis
+    ----param about the carrier wave
+    f_c: freq of the carrier wave    
+    phase_shift: initial phase of the carrier wave
+    ---param about the modulation
+    f_m: freq of the modulation envelope, f_m < f_c
+    mod_index: modulation index, = (V_on - V_off)/(V_on + V_off), within (0, 1)
+    envelope_shape: square or triangle or sine
+    duty_cycle: only appliable to square-wave envelope
+    ---param about ramp up/down
+    ramp_applied: enable the Gaussian ramp up/down
+    ramp_time_rel: ramp-up/down time, defined in terms of half the period of the envelope
+    ----param about noise
+    noise_added: enable adding the random noise
+    snr_db: signal-to-noise ratio in dB, = 20*log10(1 / stdev of noise)
+    ----notes
+    1. the pulse signal has a unit amplitude
+    '''
+    t = np.linspace(0, duration, int(f_s*duration), endpoint=False)
+    carrier = np.sin(2*np.pi*f_c*t + phase_shift)
+    if envelope_shape == 'square':
+        envelope = np.abs((1/(mod_index+1)) * (signal.square(2*np.pi*f_m*t, duty=duty_cycle) + mod_index))
+        if ramp_applied == True:
+            ramp_up_index = np.insert(np.where( np.isclose(np.diff(envelope), (1-(1-mod_index)/(mod_index+1))) )[0] + 1, 0, 0)
+            print(ramp_up_index)
+            ramp_down_index = np.where( np.isclose(np.diff(envelope), ((1-mod_index)/(mod_index+1)-1)) )[0]
+            ramp_samples = int(ramp_time_rel*(0.5/f_m)*f_s)            
+            window = signal.windows.gaussian(ramp_samples*2, std=ramp_samples/3)
+            for i in ramp_up_index:
+                envelope[i:i+ramp_samples] = (1-(1-mod_index)/(mod_index+1))*envelope[i:i+ramp_samples]*window[0:ramp_samples] + (1-mod_index)/(mod_index+1)
+            for i in ramp_down_index:
+                envelope[i+1-ramp_samples:i+1] = (1-(1-mod_index)/(mod_index+1))*envelope[i+1-ramp_samples:i+1]*window[-ramp_samples:] + (1-mod_index)/(mod_index+1)         
+    elif envelope_shape == 'triangle':
+        envelope = np.abs((1/(mod_index+1)) * (signal.sawtooth(2*np.pi*f_m*t, width=0.5) + mod_index))
+    else:
+        envelope = np.abs((1/(mod_index+1)) * (np.sin(2*np.pi*f_m*t) + mod_index))        
+    
+    sig = carrier*envelope
+    
+    if noise_added == True:
+        one_sigma = 10**(-1*snr_db/20)
+        noise = np.clip(one_sigma*np.random.randn(len(t)), -3.0*one_sigma, 3.0*one_sigma)  # 1-sigma definition used, 3-sigma clamp applied
+        sig = sig + noise
+    
+    return t, envelope, sig  
