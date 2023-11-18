@@ -4,6 +4,7 @@ from data_visualization_and_processing import helper
 import glob
 import os
 import zipfile
+from scipy import signal
 
 def search_spectrum_peaks(spectra_df, quantity='h_field', max_value_used=True, low_freq_truncated=True, high_freq_truncated=True, output_rounded=True):
     # remove artificial high fields at the low and high frequency ends
