@@ -5,6 +5,7 @@ import glob
 import os
 import zipfile
 from scipy import signal
+import scipy.constants as sc
 
 def search_spectrum_peaks(spectra_df, quantity='h_field', max_value_used=True, low_freq_truncated=True, high_freq_truncated=True, output_rounded=True):
     # remove artificial high fields at the low and high frequency ends
@@ -604,3 +605,8 @@ def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m
         sig = sig + noise
     
     return t, envelope, sig  
+
+
+def calc_induced_efield_from_incident_efield(einc, f):
+    eind = 3.79 * sc.epsilon_0 / np.abs(sc.epsilon_0*(1+55) - 1j*0.75/(2*np.pi*f)) * einc
+    return eind
