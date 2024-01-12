@@ -265,23 +265,21 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     gz_1 = (ht_sensor[0] - ht_sensor[4]) / 22e-3 
     gz_2 = (ht_sensor[1] - ht_sensor[5]) / 22e-3
     gz_3 = (ht_sensor[2] - ht_sensor[6]) / 22e-3
-    gz_4 = (ht_sensor[3] - ht_sensor[7]) / 22e-3
-    
+    gz_4 = (ht_sensor[3] - ht_sensor[7]) / 22e-3    
     gz_n_center = np.mean([gz_1, gz_2, gz_3, gz_4]) / ht_center
     
     gx_1 = (ht_sensor[1] - ht_sensor[0]) / 22e-3 
     gx_2 = (ht_sensor[5] - ht_sensor[4]) / 22e-3
     gx_3 = (ht_sensor[6] - ht_sensor[7]) / 22e-3
-    gx_4 = (ht_sensor[2] - ht_sensor[3]) / 22e-3
-    
+    gx_4 = (ht_sensor[2] - ht_sensor[3]) / 22e-3    
     gx_n_center = np.mean([gx_1, gx_2, gx_3, gx_4]) / ht_center
     
     gy_1 = (ht_sensor[3] - ht_sensor[0]) / 22e-3 
     gy_2 = (ht_sensor[7] - ht_sensor[4]) / 22e-3
     gy_3 = (ht_sensor[6] - ht_sensor[5]) / 22e-3
-    gy_4 = (ht_sensor[2] - ht_sensor[1]) / 22e-3
-    
+    gy_4 = (ht_sensor[2] - ht_sensor[1]) / 22e-3    
     gy_n_center = np.mean([gy_1, gy_2, gy_3, gy_4]) / ht_center
+
     gt_n_center = np.sqrt(gx_n_center**2 + gy_n_center**2 + gz_n_center**2)
     g_n_center = [gx_n_center, gy_n_center, gz_n_center, gt_n_center]
     
@@ -298,12 +296,14 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
     ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
     ht_tip_4 = ht_mid_4 * extrapolation_factor_fitted(gz_n_4)
-    ht_tip = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
-    ht_tip_rms = ht_tip/np.sqrt(2)
+    ht_tip_max = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip_avg = np.mean([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip = [ht_tip_max, ht_tip_avg]
+    ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]
     
-    ht_tip_error_1 = 20*np.log10(ht_tip / np.max([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4]))
-    ht_tip_error_2 = 20*np.log10(ht_tip / ht_tip_true) 
-    ht_tip_error = [ht_tip_error_1, ht_tip_error_2]
+    ht_tip_error_max = 20*np.log10(ht_tip_max / ht_tip_true]))
+    ht_tip_error_avg = 20*np.log10(ht_tip_avg / ht_tip_true) 
+    ht_tip_error = [ht_tip_error_max, ht_tip_error_avg]
     
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
 
