@@ -301,7 +301,7 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     ht_tip = [ht_tip_max, ht_tip_avg]
     ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]
     
-    ht_tip_error_max = 20*np.log10(ht_tip_max / ht_tip_true]))
+    ht_tip_error_max = 20*np.log10(ht_tip_max / ht_tip_true)
     ht_tip_error_avg = 20*np.log10(ht_tip_avg / ht_tip_true) 
     ht_tip_error = [ht_tip_error_max, ht_tip_error_avg]
     
