@@ -298,14 +298,17 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
     ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
     ht_tip_4 = ht_mid_4 * extrapolation_factor_fitted(gz_n_4)
+    
     ht_tip_max = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
     ht_tip_avg = np.mean([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
-    ht_tip = [ht_tip_max, ht_tip_avg]
+    ht_tip_true_avg = np.mean([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4])
+    ht_tip = [ht_tip_max, ht_tip_avg, ht_tip_true_avg]
     ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]
     
     ht_tip_error_max = 20*np.log10(ht_tip_max / ht_tip_true)
     ht_tip_error_avg = 20*np.log10(ht_tip_avg / ht_tip_true) 
-    ht_tip_error = [ht_tip_error_max, ht_tip_error_avg]
+    ht_tip_error_true_avg = 20*np.log10(ht_tip_true_avg / ht_tip_true) 
+    ht_tip_error = [ht_tip_error_max, ht_tip_error_avg, ht_tip_error_true_avg]
     
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
 
