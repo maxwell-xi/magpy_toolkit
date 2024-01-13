@@ -260,7 +260,9 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
     h_center = [hx_center, hy_center, hz_center, ht_center_combined]
     h_center_rms = [x/np.sqrt(2) for x in h_center]
-    ht_center_error = 20*np.log10(ht_center_combined / ht_center_true)
+    ht_center_error_1 = 20*np.log10(ht_center_combined / ht_center_true)
+    ht_center_error_2 = 20*np.log10(ht_center / ht_center_true)
+    ht_center_error = [ht_center_error_1, ht_center_error_2]
     
     gz_1 = (ht_sensor[0] - ht_sensor[4]) / 22e-3 
     gz_2 = (ht_sensor[1] - ht_sensor[5]) / 22e-3
