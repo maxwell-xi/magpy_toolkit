@@ -226,9 +226,9 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):
     INPUT: field data (incl. x-, y-, z-components and the total field), the corresponding grid, and the coordinates of the probe center
     OUTPUT: field readings at the probe center and the probe tip, following the implementation of MAGPy V2.x 
     '''  
-    i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
-    j_center = np.argwhere(grid_mm[1] == probe_center_loc_mm[1])[0,0]
-    k_center = np.argwhere(grid_mm[2] == probe_center_loc_mm[2])[0,0]
+    i_center = np.argwhere(np.isclose(grid_mm[0], probe_center_loc_mm[0]))[0,0]
+    j_center = np.argwhere(np.isclose(grid_mm[1], probe_center_loc_mm[1]))[0,0]
+    k_center = np.argwhere(np.isclose(grid_mm[2], probe_center_loc_mm[2]))[0,0]
     ht_center_true = field[3][i_center, j_center, k_center] # total local H-field at the probe center with the indices (i_center, j_center, k_center)
     
     k_tip = k_center - 37  # 37 grid lines corresponds to 18.5 mm
