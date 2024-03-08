@@ -1,7 +1,7 @@
 import numpy as np
 
 def induced_e_cube(g_n, field, e_br, hfield_used=True): # valid for ICNIRP 2010 & ICNIRP 2020
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = 1/((1+6.5e-6*g_n**5.8)**(1/5.8))
@@ -12,7 +12,7 @@ def induced_e_cube(g_n, field, e_br, hfield_used=True): # valid for ICNIRP 2010 
     return e_est
 
 def induced_e_line(g_n, field, e_br, hfield_used=True): # valid for IEEE 2005 & IEEE 2019
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = 1/((1+4e-11*g_n**6.6)**(1/6.6))
@@ -23,7 +23,7 @@ def induced_e_line(g_n, field, e_br, hfield_used=True): # valid for IEEE 2005 & 
     return e_est
    
 def induced_j_area(g_n, field, j_br, hfield_used=True): # valid for ICNIRP 1998
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = 1/((1+4e-3*g_n**2.9)**(1/2.9))
@@ -34,7 +34,7 @@ def induced_j_area(g_n, field, j_br, hfield_used=True): # valid for ICNIRP 1998
     return j_est
     
 def sar_10g(g_n, field, f, hfield_used=True): # valid for ICNIRP 1998/2020 and IEEE 2005/2019
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = ( 1/((1+2e-1*g_n**1.2)**(1/1.2)) )**2
@@ -45,7 +45,7 @@ def sar_10g(g_n, field, f, hfield_used=True): # valid for ICNIRP 1998/2020 and I
     return sar_est
 
 def sar_1g(g_n, field, f, hfield_used=True): # valid for FCC and ISED
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = ( 1/((1+2.5e-1*g_n**1.1)**(1/1.1)) )**2
@@ -56,7 +56,7 @@ def sar_1g(g_n, field, f, hfield_used=True): # valid for FCC and ISED
     return sar_est
 
 def induced_e_local(g_n, field, e_br, hfield_used=True): # valid for ISED
-    if g_n < 0:
+    if (g_n < 0).any():
         print('Negative normalized gradent encountered! Absolute value used to derive the induced field.')
         g_n = np.abs(g_n)
     k = 1/((1+6.5e-6*g_n**5.8)**(1/5.8))
