@@ -376,9 +376,9 @@ def mimic_old_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 29.5]):
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
     
 def mimic_magpy_probe_with_sensor_avg(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):    
-    i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
-    j_center = np.argwhere(grid_mm[1] == probe_center_loc_mm[1])[0,0]
-    k_center = np.argwhere(grid_mm[2] == probe_center_loc_mm[2])[0,0]
+    i_center = np.argwhere(np.isclose(grid_mm[0], probe_center_loc_mm[0]))[0,0]
+    j_center = np.argwhere(np.isclose(grid_mm[1], probe_center_loc_mm[1]))[0,0]
+    k_center = np.argwhere(np.isclose(grid_mm[2], probe_center_loc_mm[2]))[0,0]
     hx_center_true = helper.x_component_avg(field, 20, i_center, j_center, k_center) # 10 mm sensor sidelength corresponds to 20 grid lines
     hy_center_true = helper.y_component_avg(field, 20, i_center, j_center, k_center)
     hz_center_true = helper.z_component_avg(field, 20, i_center, j_center, k_center)
@@ -468,14 +468,72 @@ def mimic_magpy_probe_with_sensor_avg(field, grid_mm, probe_center_loc_mm = [0, 
     ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
     ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
     ht_tip_4 = ht_mid_4 * extrapolation_factor_fitted(gz_n_4)
-    ht_tip = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
-    ht_tip_rms = ht_tip/np.sqrt(2)    
+    ht_tip_max = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip_avg = np.mean([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip = [ht_tip_max, ht_tip_avg]
+    ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]    
     
-    ht_tip_error_1 = 20*np.log10(ht_tip / np.max([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4]))
-    ht_tip_error_2 = 20*np.log10(ht_tip / ht_tip_true) 
-    ht_tip_error = [ht_tip_error_1, ht_tip_error_2]    
+    ht_tip_error_max = 20*np.log10(ht_tip_max / np.max([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4]))
+    ht_tip_error_avg = 20*np.log10(ht_tip_avg / np.mean([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4])) 
+    ht_tip_error_true_avg = 20*np.log10(ht_tip_avg / ht_tip_true)
+    ht_tip_error = [ht_tip_error_max, ht_tip_error_avg, ht_tip_error_true_avg]    
     
     return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error  
+
+def mimic_magpy_probe_with_sensor_avg_simplified(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]):    
+    i_center = np.argwhere(np.isclose(grid_mm[0], probe_center_loc_mm[0]))[0,0]
+    j_center = np.argwhere(np.isclose(grid_mm[1], probe_center_loc_mm[1]))[0,0]
+    k_center = np.argwhere(np.isclose(grid_mm[2], probe_center_loc_mm[2]))[0,0]
+       
+    k_tip = k_center - 37  # 37 grid lines corresponds to 18.5 mm
+    
+    i_plus = i_center + 22; i_minus = i_center - 22
+    j_plus = j_center + 22; j_minus = j_center - 22
+    k_top = k_center + 22; k_bottom = k_center - 22 
+   
+    i_sensor = [i_plus, i_minus, i_minus, i_plus, i_plus, i_minus, i_minus, i_plus]
+    j_sensor = [j_plus, j_plus, j_minus, j_minus, j_plus, j_plus, j_minus, j_minus]
+    k_sensor = [k_bottom, k_bottom, k_bottom, k_bottom, k_top, k_top, k_top, k_top]
+    
+    hx_sensor = []; hy_sensor = []; hz_sensor = []; ht_sensor = []
+    for n in np.arange(8):
+        hx_sensor_temp = helper.x_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+        hy_sensor_temp = helper.y_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+        hz_sensor_temp = helper.z_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+        hx_sensor.append(hx_sensor_temp)
+        hy_sensor.append(hy_sensor_temp)
+        hz_sensor.append(hz_sensor_temp)
+        ht_sensor.append(np.sqrt(hx_sensor_temp**2 + hy_sensor_temp**2 + hz_sensor_temp**2))
+        
+    hx_center = np.mean(hx_sensor); hy_center = np.mean(hy_sensor); hz_center = np.mean(hz_sensor); ht_center = np.mean(ht_sensor)
+    ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
+    h_center = [hx_center, hy_center, hz_center, ht_center_combined]
+    h_center_rms = [x/np.sqrt(2) for x in h_center]
+    
+    gz_1 = (ht_sensor[0] - ht_sensor[4]) / 22e-3 
+    gz_2 = (ht_sensor[1] - ht_sensor[5]) / 22e-3
+    gz_3 = (ht_sensor[2] - ht_sensor[6]) / 22e-3
+    gz_4 = (ht_sensor[3] - ht_sensor[7]) / 22e-3
+    
+    gz_n_center = np.mean([gz_1, gz_2, gz_3, gz_4]) / ht_center
+    
+    ht_mid_1 = (ht_sensor[0] + ht_sensor[4]) / 2 
+    ht_mid_2 = (ht_sensor[1] + ht_sensor[5]) / 2
+    ht_mid_3 = (ht_sensor[2] + ht_sensor[6]) / 2
+    ht_mid_4 = (ht_sensor[3] + ht_sensor[7]) / 2
+    
+    gz_n_1 = gz_1 / ht_mid_1; gz_n_2 = gz_2 / ht_mid_2; gz_n_3 = gz_3 / ht_mid_3; gz_n_4 = gz_4 / ht_mid_4     
+    
+    ht_tip_1 = ht_mid_1 * extrapolation_factor_fitted(gz_n_1)
+    ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
+    ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
+    ht_tip_4 = ht_mid_4 * extrapolation_factor_fitted(gz_n_4)
+    ht_tip_max = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip_avg = np.mean([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
+    ht_tip = [ht_tip_max, ht_tip_avg]
+    ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]    
+        
+    return h_center_rms, gz_n_center, ht_tip_rms
     
 # find files whose names meet the specified pattern under the specified directory
 def get_files(file_dir, file_pattern):
