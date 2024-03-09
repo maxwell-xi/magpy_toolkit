@@ -316,7 +316,7 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5], sensor
     
     ht_tip_result = [ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4, ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4, ht_tip_true]
    
-    return ht_center_results, gz_center_result, ht_tip_result
+    return ht_center_result, gz_center_result, ht_tip_result
     
 def mimic_old_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 29.5]):    
     i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
