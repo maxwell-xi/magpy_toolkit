@@ -221,97 +221,103 @@ def extrapolation_factor_fitted(g_n, local_field_at_probe_tip=True):
     
     return extrap_factor
 
-def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5]): 
+def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5], sensor_avg_considered = False): 
     '''
-    INPUT: field data (incl. x-, y-, z-components and the total field), the corresponding grid, and the coordinates of the probe center
-    OUTPUT: field readings at the probe center and the probe tip, following the implementation of MAGPy V2.x 
-    '''  
+    INPUT: H-field data (incl. x-, y-, z-components and the total field), the corresponding grid (0.5 mm step), and the coordinates of the probe center
+    OUTPUT: H-field results (measured value and true value) at the probe center and the probe tip, following the implementation of MAGPy V2.x 
+    ''' 
+
+    # extract H-field at probe center
     i_center = np.argwhere(np.isclose(grid_mm[0], probe_center_loc_mm[0]))[0,0]
     j_center = np.argwhere(np.isclose(grid_mm[1], probe_center_loc_mm[1]))[0,0]
     k_center = np.argwhere(np.isclose(grid_mm[2], probe_center_loc_mm[2]))[0,0]
     ht_center_true = field[3][i_center, j_center, k_center] # total local H-field at the probe center with the indices (i_center, j_center, k_center)
     
-    k_tip = k_center - 37  # 37 grid lines corresponds to 18.5 mm
-    ht_tip_true = field[3][i_center, j_center, k_tip] # total local H-field at the probe tip which is 18.5 mm below the probe center
-    
-    i_plus = i_center + 22; i_minus = i_center - 22
+    # derive measured H-fields at probe center by averaging over 8 sensors 
+    i_plus = i_center + 22; i_minus = i_center - 22 # 22 grid lines corresponds to 11 mm
     j_plus = j_center + 22; j_minus = j_center - 22
-    k_top = k_center + 22; k_bottom = k_center - 22    
-  
-    # total local H-field at the four points which are the intersects of the four vertical edges of the sensor cube and the probe surface
-    ht_tip_true_1 = field[3][i_plus, j_plus, k_tip]
-    ht_tip_true_2 = field[3][i_minus, j_plus, k_tip]
-    ht_tip_true_3 = field[3][i_minus, j_minus, k_tip]
-    ht_tip_true_4 = field[3][i_plus, j_minus, k_tip]
-        
+    k_top = k_center + 22; k_bottom = k_center - 22  
+    
     i_sensor = [i_plus, i_minus, i_minus, i_plus, i_plus, i_minus, i_minus, i_plus]
     j_sensor = [j_plus, j_plus, j_minus, j_minus, j_plus, j_plus, j_minus, j_minus]
     k_sensor = [k_bottom, k_bottom, k_bottom, k_bottom, k_top, k_top, k_top, k_top]
     
     hx_sensor = []; hy_sensor = []; hz_sensor = []; ht_sensor = []
-    for n in np.arange(8):
-        hx_sensor.append(field[0][i_sensor[n], j_sensor[n], k_sensor[n]])
-        hy_sensor.append(field[1][i_sensor[n], j_sensor[n], k_sensor[n]])
-        hz_sensor.append(field[2][i_sensor[n], j_sensor[n], k_sensor[n]])
-        ht_sensor.append(field[3][i_sensor[n], j_sensor[n], k_sensor[n]])
+    if sensor_avg_considered == True:
+        for n in np.arange(8):
+            hx_sensor_temp = helper.x_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+            hy_sensor_temp = helper.y_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+            hz_sensor_temp = helper.z_component_avg(field, 20, i_sensor[n], j_sensor[n], k_sensor[n])
+            ht_sensor_temp = np.sqrt(hx_sensor_temp**2 + hy_sensor_temp**2 + hz_sensor_temp**2)
+            hx_sensor.append(hx_sensor_temp)
+            hy_sensor.append(hy_sensor_temp)
+            hz_sensor.append(hz_sensor_temp)
+            ht_sensor.append(ht_sensor_temp)
+    else:
+        for n in np.arange(8):
+            hx_sensor.append(field[0][i_sensor[n], j_sensor[n], k_sensor[n]])
+            hy_sensor.append(field[1][i_sensor[n], j_sensor[n], k_sensor[n]])
+            hz_sensor.append(field[2][i_sensor[n], j_sensor[n], k_sensor[n]])
+            ht_sensor.append(field[3][i_sensor[n], j_sensor[n], k_sensor[n]])
 
-    # H-fields at the probe center, averaged over 8 sensors    
     hx_center = np.mean(hx_sensor); hy_center = np.mean(hy_sensor); hz_center = np.mean(hz_sensor); ht_center = np.mean(ht_sensor)
     ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
-    h_center = [hx_center, hy_center, hz_center, ht_center_combined]
-    h_center_rms = [x/np.sqrt(2) for x in h_center]
-    ht_center_error_1 = 20*np.log10(ht_center_combined / ht_center_true)
-    ht_center_error_2 = 20*np.log10(ht_center / ht_center_true)
-    ht_center_error = [ht_center_error_1, ht_center_error_2]
     
+    ht_center_result = [ht_center, ht_center_combined, ht_center_true]
+
+    # extract gradient at probe center
+    gz_center_true = (field[3][i_center, j_center, k_center-1] - field[3][i_center, j_center, k_center+1]) / 1e-3
+    
+    # derive measured gradients at probe center with a simplifed approach (instead of the optimization approach used in MAGPy)
     gz_1 = (ht_sensor[0] - ht_sensor[4]) / 22e-3 
     gz_2 = (ht_sensor[1] - ht_sensor[5]) / 22e-3
     gz_3 = (ht_sensor[2] - ht_sensor[6]) / 22e-3
     gz_4 = (ht_sensor[3] - ht_sensor[7]) / 22e-3    
-    gz_n_center = np.mean([gz_1, gz_2, gz_3, gz_4]) / ht_center
+    gz_center = np.mean([gz_1, gz_2, gz_3, gz_4]) 
     
-    gx_1 = (ht_sensor[1] - ht_sensor[0]) / 22e-3 
-    gx_2 = (ht_sensor[5] - ht_sensor[4]) / 22e-3
-    gx_3 = (ht_sensor[6] - ht_sensor[7]) / 22e-3
-    gx_4 = (ht_sensor[2] - ht_sensor[3]) / 22e-3    
-    gx_n_center = np.mean([gx_1, gx_2, gx_3, gx_4]) / ht_center
+    gz_center_result = [gz_center, gz_center_true]
     
-    gy_1 = (ht_sensor[3] - ht_sensor[0]) / 22e-3 
-    gy_2 = (ht_sensor[7] - ht_sensor[4]) / 22e-3
-    gy_3 = (ht_sensor[6] - ht_sensor[5]) / 22e-3
-    gy_4 = (ht_sensor[2] - ht_sensor[1]) / 22e-3    
-    gy_n_center = np.mean([gy_1, gy_2, gy_3, gy_4]) / ht_center
-
-    gt_n_center = np.sqrt(gx_n_center**2 + gy_n_center**2 + gz_n_center**2)
-    g_n_center = [gx_n_center, gy_n_center, gz_n_center, gt_n_center]
+    # gradients along x and y not exposed
+    #gx_1 = (ht_sensor[1] - ht_sensor[0]) / 22e-3 
+    #gx_2 = (ht_sensor[5] - ht_sensor[4]) / 22e-3
+    #gx_3 = (ht_sensor[6] - ht_sensor[7]) / 22e-3
+    #gx_4 = (ht_sensor[2] - ht_sensor[3]) / 22e-3    
+    #gx_center = np.mean([gx_1, gx_2, gx_3, gx_4]) 
     
+    #gy_1 = (ht_sensor[3] - ht_sensor[0]) / 22e-3 
+    #gy_2 = (ht_sensor[7] - ht_sensor[4]) / 22e-3
+    #gy_3 = (ht_sensor[6] - ht_sensor[5]) / 22e-3
+    #gy_4 = (ht_sensor[2] - ht_sensor[1]) / 22e-3    
+    #gy_center = np.mean([gy_1, gy_2, gy_3, gy_4])
+    
+    #gt_center = np.sqrt(gx_center**2 + gy_center**2 + gz_center**2)
+    #g_center = [gx_center, gy_center, gz_center, gt_center]
+        
+    # extract H-field at probe tip
+    k_tip = k_center - 37  # 37 grid lines corresponds to 18.5 mm
+    ht_tip_true = field[3][i_center, j_center, k_tip] # total local H-field at the probe tip which is 18.5 mm below the probe center  
+  
+    # extract H-fields at the four projection points on the probe surface corresponding to the four vertical sensor pairs
+    ht_tip_true_1 = field[3][i_plus, j_plus, k_tip]
+    ht_tip_true_2 = field[3][i_minus, j_plus, k_tip]
+    ht_tip_true_3 = field[3][i_minus, j_minus, k_tip]
+    ht_tip_true_4 = field[3][i_plus, j_minus, k_tip]
+    
+    # derive measured H-fields at the four projection points by field extrapolation
     ht_mid_1 = (ht_sensor[0] + ht_sensor[4]) / 2 
     ht_mid_2 = (ht_sensor[1] + ht_sensor[5]) / 2
     ht_mid_3 = (ht_sensor[2] + ht_sensor[6]) / 2
-    ht_mid_4 = (ht_sensor[3] + ht_sensor[7]) / 2   
-  
-    gz_n_1 = gz_1 / ht_mid_1; gz_n_2 = gz_2 / ht_mid_2; gz_n_3 = gz_3 / ht_mid_3; gz_n_4 = gz_4 / ht_mid_4     
-    
-    # total H-fields at the four points which are the intersects of the four vertical edges of the sensor cube and the probe surface
-    # obtained from field extrapolation
+    ht_mid_4 = (ht_sensor[3] + ht_sensor[7]) / 2    
+    gz_n_1 = gz_1 / ht_mid_1; gz_n_2 = gz_2 / ht_mid_2; gz_n_3 = gz_3 / ht_mid_3; gz_n_4 = gz_4 / ht_mid_4    
     ht_tip_1 = ht_mid_1 * extrapolation_factor_fitted(gz_n_1)
     ht_tip_2 = ht_mid_2 * extrapolation_factor_fitted(gz_n_2)
     ht_tip_3 = ht_mid_3 * extrapolation_factor_fitted(gz_n_3)
     ht_tip_4 = ht_mid_4 * extrapolation_factor_fitted(gz_n_4)
     
-    ht_tip_max = np.max([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
-    ht_tip_avg = np.mean([ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4])
-    ht_tip_true_avg = np.mean([ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4])
-    ht_tip = [ht_tip_max, ht_tip_avg, ht_tip_true_avg]
-    ht_tip_rms = [x/np.sqrt(2) for x in ht_tip]
+    ht_tip_result = [ht_tip_1, ht_tip_2, ht_tip_3, ht_tip_4, ht_tip_true_1, ht_tip_true_2, ht_tip_true_3, ht_tip_true_4, ht_tip_true]
+   
+    return ht_center_results, gz_center_result, ht_tip_result
     
-    ht_tip_error_max = 20*np.log10(ht_tip_max / ht_tip_true)
-    ht_tip_error_avg = 20*np.log10(ht_tip_avg / ht_tip_true) 
-    ht_tip_error_true_avg = 20*np.log10(ht_tip_true_avg / ht_tip_true) 
-    ht_tip_error = [ht_tip_error_max, ht_tip_error_avg, ht_tip_error_true_avg]
-    
-    return h_center_rms, ht_center_error, g_n_center, ht_tip_rms, ht_tip_error
-
 def mimic_old_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 29.5]):    
     i_center = np.argwhere(grid_mm[0] == probe_center_loc_mm[0])[0,0]
     j_center = np.argwhere(grid_mm[1] == probe_center_loc_mm[1])[0,0]
