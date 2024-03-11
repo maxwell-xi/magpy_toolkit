@@ -263,7 +263,7 @@ def mimic_magpy_probe(field, grid_mm, probe_center_loc_mm = [0, 0, 18.5], sensor
     hx_center = np.mean(hx_sensor); hy_center = np.mean(hy_sensor); hz_center = np.mean(hz_sensor); ht_center = np.mean(ht_sensor)
     ht_center_combined = np.sqrt(hx_center**2 + hy_center**2 + hz_center**2)
     
-    ht_center_result = [ht_center, ht_center_combined, ht_center_true]
+    ht_center_result = [ht_center, ht_center_combined, ht_center_true] # confirmed by Dmytro on 2024-3-11 that ht_center was used to derive the normalized gradient at probe center
 
     # extract gradient at probe center
     gz_center_true = (field[3][i_center, j_center, k_center-1] - field[3][i_center, j_center, k_center+1]) / 1e-3
