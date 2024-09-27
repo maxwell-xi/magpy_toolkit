@@ -577,7 +577,7 @@ def compute_moving_average(input_data, window_size = 12000):
 # calculate the minimum size of the slice of the time-domain signal, from Shihao
 # default min_cycles set to 5, corresponding to the implementation of MAGPy handheld V2.0 and Module WPT V2.0
 def compute_minimal_slice_window_size(user_defined_frequency, min_cycles = 5):
-    computed_min_slice_window_size = min_cycles * (1 / user_defined_frequency) * 25000000
+    computed_min_slice_window_size = int(np.ceil(min_cycles * (1 / user_defined_frequency) * 25000000))
     print("computed_min_slice_window_size: ", computed_min_slice_window_size)
     return computed_min_slice_window_size
 
@@ -585,9 +585,7 @@ def compute_minimal_slice_window_size(user_defined_frequency, min_cycles = 5):
 def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = True, min_window_size = 1024):
     min_slice_window_size = max(min_window_size, 1024) # 1024 corresponding to the implementation of MAGPy handheld V2.0 and Module WPT V2.0
 
-    #print("final decided min_slice_window_size: ", min_slice_window_size)
-
-    half_min_window_size = min_slice_window_size / 2
+    print("final decided min_slice_window_size: ", min_slice_window_size)
 
     input_size = input_data.shape[0]
     mid_pos = int(input_size / 2)
@@ -607,7 +605,7 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
     left_count = 1
     right_count = 1
 
-    while(left_pos >= 0 and input_data[left_pos] >= threshold):
+    while(left_pos > 0 and input_data[left_pos] >= threshold):
         left_pos -= 1
         left_count += 1
 
@@ -616,7 +614,7 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
         right_count += 1
 
     # when the slice window size is smaller than the minimal window size
-    while(left_count + right_count) < (min_slice_window_size - 1):
+    while( (left_count + right_count - 1) < min_slice_window_size ):
         if left_pos >= 0:
             left_pos -= 1
             left_count += 1
