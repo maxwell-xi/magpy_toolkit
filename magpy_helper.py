@@ -565,9 +565,9 @@ def compute_moving_average(input_data, window_size = 12000):
     n = window_size
     ret = np.cumsum(input_data, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
-    output = ret[n - 1:] / n
+    output = ret[n - 1:] / n # len(output) = len(input_data) - window_size + 1
 
-    # add tail and head constant value
+    # add tail and head constant value to make the output of the same length as the input
     tail = np.repeat(output[-1], int(window_size / 2))
     head = np.repeat(output[0], int(window_size / 2)-1)
     output = np.concatenate((head, output))
