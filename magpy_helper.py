@@ -621,7 +621,7 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
         if right_pos < (input_size - 1):
             right_pos += 1
             right_count += 1
-    return left_pos, right_pos
+    return left_pos, right_pos, mid_pos
 
 
 def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m=1e2, mod_index=1, envelope_shape='square', duty_cycle=0.5, ramp_applied=True, ramp_time_rel=0.2, noise_added=False, snr_db=30):
@@ -661,8 +661,10 @@ def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m
                 envelope[i+1-ramp_samples:i+1] = (1-(1-mod_index)/(mod_index+1))*envelope[i+1-ramp_samples:i+1]*window[-ramp_samples:] + (1-mod_index)/(mod_index+1)         
     elif envelope_shape == 'triangle':
         envelope = np.abs((1/(mod_index+1)) * (signal.sawtooth(2*np.pi*f_m*t, width=0.5) + mod_index))
+    elif envelope_shape == 'sinusoid':
+        envelope = np.abs((1/(mod_index+1)) * (np.sin(2*np.pi*f_m*t) + mod_index))
     else:
-        envelope = np.abs((1/(mod_index+1)) * (np.sin(2*np.pi*f_m*t) + mod_index))        
+        envelope = 1
     
     sig = carrier*envelope
     
