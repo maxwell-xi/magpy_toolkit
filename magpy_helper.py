@@ -609,16 +609,16 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
         left_pos -= 1
         left_count += 1
 
-    while(right_pos < input_size and input_data[right_pos] >= threshold):
+    while(right_pos < (input_size - 1) and input_data[right_pos] >= threshold):
         right_pos += 1
         right_count += 1
 
     # when the slice window size is smaller than the minimal window size
     while( (left_count + right_count - 1) < min_slice_window_size ):
-        if left_pos >= 0:
+        if left_pos > 0:
             left_pos -= 1
             left_count += 1
-        if right_pos < input_size:
+        if right_pos < (input_size - 1):
             right_pos += 1
             right_count += 1
     return left_pos, right_pos
