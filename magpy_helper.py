@@ -578,14 +578,14 @@ def compute_moving_average(input_data, window_size = 12000):
 # default min_cycles set to 5, corresponding to the implementation of MAGPy handheld V2.0 and Module WPT V2.0
 def compute_minimal_slice_window_size(user_defined_frequency, min_cycles = 5):
     computed_min_slice_window_size = int(np.ceil(min_cycles * (1 / user_defined_frequency) * 25000000))
-    print("computed_min_slice_window_size: ", computed_min_slice_window_size)
+    #print("computed_min_slice_window_size: ", computed_min_slice_window_size)
     return computed_min_slice_window_size
 
 # determine the start and stop index of the slice of the time-domain signal, from Shihao
 def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = True, min_window_size = 1024):
     min_slice_window_size = max(min_window_size, 1024) # 1024 corresponding to the implementation of MAGPy handheld V2.0 and Module WPT V2.0
 
-    print("final decided min_slice_window_size: ", min_slice_window_size)
+    #print("final decided min_slice_window_size: ", min_slice_window_size)
 
     input_size = input_data.shape[0]
     mid_pos = int(input_size / 2)
@@ -593,7 +593,7 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
     if(not is_peak_frame):
         mid_pos = np.argmax(input_data)
 
-    print("Mid position of slice window: ", mid_pos)
+    #print("Mid position of slice window: ", mid_pos)
 
     mid_value = input_data[mid_pos]
 
