@@ -623,7 +623,30 @@ def compute_slice_indices(input_data, decay_threshold = 0.95, is_peak_frame = Tr
             right_count += 1
     return left_pos, right_pos, mid_pos
 
+# function used to determine the left boundary of the modulation section in a 6 ms data frame for charger signals
+def find_first_zero_crossing(arr):
+    # Loop through the array and find the first zero-crossing
+    for i in range(1, len(arr)):
+        if (arr[i-1] > 0 and arr[i] <= 0) or (arr[i-1] < 0 and arr[i] >= 0):
+            if (arr[i] != 0) and (abs(arr[i-1]) < abs(arr[i])): # chose the point which is closer to 0 when arr[i]!=0
+                return i-1
+            else:
+                return i # Return the index of the first zero-crossing point
+            
+    return None  # Return None if no zero-crossing is found
 
+# function used to determine the right boundary of the modulation section in a 6 ms data frame for charger signals
+def find_last_zero_crossing(arr):
+    # Loop through the array from the end and find the last zero-crossing
+    for i in range(len(arr) - 1, 0, -1):
+        if (arr[i-1] > 0 and arr[i] <= 0) or (arr[i-1] < 0 and arr[i] >= 0): # chose the point which is closer to 0 when arr[i]!=0
+            if (arr[i] != 0) and (abs(arr[i-1]) < abs(arr[i])):
+                return i-1
+            else:
+                return i # Return the index of the last zero-crossing point
+
+    return None  # Return None if no zero-crossing is found
+    
 def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m=1e2, mod_index=1, envelope_shape='square', duty_cycle=0.5, ramp_applied=True, ramp_time_rel=0.2, noise_added=False, snr_db=30):
     '''    
     ---global param
