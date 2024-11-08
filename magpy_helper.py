@@ -646,6 +646,59 @@ def find_last_zero_crossing(arr):
                 return i # Return the index of the last zero-crossing point
 
     return None  # Return None if no zero-crossing is found
+
+# function to determine the phase based on the change between the last and the next data points    
+def determine_phase_deg(arr, index):
+    if (arr[index-1] > arr[index+1]):
+        phase_deg = 180
+    elif (arr[index-1] < arr[index+1]):
+        phase_deg = 0
+    else:
+        phase_deg = float('nan')
+    
+    return phase_deg
+
+# function used to determine the left boundary of the modulation section in a 6 ms data frame for charger signals
+# the phase at the left boundary is also returned
+def find_first_zero_crossing_2(arr):
+    index = 0
+    phase_deg = float('nan')
+    
+    # Loop through the array and find the first zero-crossing
+    for i in range(1, len(arr)):
+        if (arr[i-1] > 0 and arr[i] <= 0) or (arr[i-1] < 0 and arr[i] >= 0):
+            if (arr[i] != 0) and (abs(arr[i-1]) < abs(arr[i])): # chose the point which is closer to 0 when arr[i]!=0
+                index = i-1
+                phase_deg = determine_phase_deg(arr, index)
+                return index, phase_deg
+            else:
+                index = i # Return the index of the first zero-crossing point
+                phase_deg = determine_phase_deg(arr, index)
+                return index, phase_deg   
+            
+    return index, phase_deg 
+
+# function used to determine the right boundary of the modulation section in a 6 ms data frame for charger signals
+# the phase at the right boundary should be equal to the specified phase
+def find_last_zero_crossing_2(arr, input_phase_deg):
+    index = len(arr) - 1
+    
+    # Loop through the array from the end and find the last zero-crossing
+    for i in range(len(arr) - 1, 0, -1):
+        if (arr[i-1] > 0 and arr[i] <= 0) or (arr[i-1] < 0 and arr[i] >= 0): # chose the point which is closer to 0 when arr[i]!=0
+            if (arr[i] != 0) and (abs(arr[i-1]) < abs(arr[i])):
+                index = i-1
+                phase_deg = determine_phase_deg(arr, index)
+                if phase_deg == input_phase_deg:
+                    return index
+            else:
+                index = i # Return the index of the last zero-crossing point
+                phase_deg = determine_phase_deg(arr, index)
+                if phase_deg == input_phase_deg:
+                    return index
+
+    return index  
+
     
 def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m=1e2, mod_index=1, envelope_shape='square', duty_cycle=0.5, ramp_applied=True, ramp_time_rel=0.2, noise_added=False, snr_db=30):
     '''    
