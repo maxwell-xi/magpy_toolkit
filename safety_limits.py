@@ -1,3 +1,11 @@
+'''
+The limits implemented here cover up to 10 MHz (or 30 MHz in some cases).
+
+When implementing the formulas for the limits, limits at the boundary frequencies
+are assigned to the frequency-independent limits (usually having rounded numbers) 
+rather than the frequency-dependent ones, if both type of limits are available there.
+'''
+
 # safety limits from ICNIRP 1998
 # source: Table 4
 # applicable frequencies: >0 Hz - 10 MHz
