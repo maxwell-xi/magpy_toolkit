@@ -788,12 +788,12 @@ def sc6_hinc_thermal(f, exposure_scenario='public'):
 # source: table 3
 def sc6_einc_thermal(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
-        if f >= 100e3 and f <= 10e6:
+        if f >= 1.1e6 and f <= 10e6:
             einc = 87 / (f*1e-6)**0.5
         else:
             einc = float('nan')
     else:
-        if f >= 100e3 and f <= 10e6:
+        if f >= 1.29e6 and f <= 10e6:
             einc = 193 / (f*1e-6)**0.5
         else:
             einc = float('nan')
@@ -831,11 +831,11 @@ def sc6_hinc_thermal_trace(exposure_scenario='public'):
 
 def sc6_einc_thermal_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [1e6, 10e6]
-        einc = [87, 28]
+        f = [1.1e6, 10e6]
+        einc = [83, 28]
     else:
-        f = [1e6, 10e6]
-        einc = [193, 61]
+        f = [1.29e6, 10e6]
+        einc = [170, 61]
     
     return f, einc
 
