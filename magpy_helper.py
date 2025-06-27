@@ -541,23 +541,6 @@ def mimic_magpy_probe_with_sensor_avg_simplified(field, grid_mm, probe_center_lo
         
     return h_center_rms, gz_n_center, ht_tip_rms
     
-# find files whose names meet the specified pattern under the specified directory
-def get_files(file_dir, file_pattern):
-    full_pattern = os.path.join(file_dir, file_pattern)
-    files = glob.glob(full_pattern)
-    files.sort()
-    
-    return files
-
-# extract compressed files whose names start with the specified string to the specified directory
-# if out_path does not exist, it will be created first 
-def extract_zip_files(zip_files, file_header, out_dir):
-    for zip_file in zip_files:
-        with zipfile.ZipFile(zip_file) as archive:
-            for file in archive.namelist():
-                if file.startswith(file_header):
-                    archive.extract(file, out_dir)
-
 # derive the envelope of the time-domain signal with moving averaging, from Shihao
 def compute_moving_average(input_data, window_size = 12000):
     # compute mvg output
