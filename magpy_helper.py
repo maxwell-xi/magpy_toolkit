@@ -701,6 +701,7 @@ def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m
     snr_db: signal-to-noise ratio in dB, = 20*log10(1 / stdev of noise)
     ----notes
     1. the pulse signal has a unit amplitude
+    2. mostly can be replaced by the better func generate_modulated_signal()
     '''
     t = np.linspace(0, duration, int(f_s*duration), endpoint=False)
     carrier = np.sin(2*np.pi*f_c*t + phase_shift)
@@ -735,3 +736,67 @@ def generate_pulse_signal(f_s=25e6, duration=6e-3, f_c=100e3, phase_shift=0, f_m
 def calc_induced_efield_from_incident_efield(einc, f):
     eind = 3.79 * sc.epsilon_0 / np.abs(sc.epsilon_0*(1+55) - 1j*0.75/(2*np.pi*f)) * einc
     return eind
+
+
+def generate_modulated_signal(f_s=25e6, duration=6e-3, f_c=39.5e3, carrier_waveform='sinusoid', phase_shift=0, am_applied=True, f_m=100, mod_index=1, envelope_waveform='sinusoid', pwm_applied=True, f_p=0.5, duty_cycle=0.5, noise_added=False, snr_db=30):
+    ''' 
+    func to generate an amplitude modulated and/or pulse width modulated signal with a unit amplitude
+    ---global param
+    f_s: sample rate in Hz
+    duration: the duration of the signal recording in second
+    ----param about the carrier wave
+    f_c: freq of the carrier wave in Hz
+    carrier_waveform: sinusoid (default) / triangle / square
+    phase_shift: initial phase of the carrier wave in radian
+    ---param about the amplitude modulation
+    am_applied: enable/disable the amplitude modulation
+    f_m: freq of the modulation envelope in Hz, f_m < f_c
+    mod_index: modulation index in the range (0, 1], = (Amax - Amin)/(Amax + Amin) = Amod / Acarrier
+    envelope_waveform: sinusoid (default) / square
+    ---param about the pulse width modulation
+    pwd_applied: enable/disable the pulse width modulation
+    f_p: pulse repeatition freq in Hz, f_p < f_m
+    duty_cycle: duty cycle of the pulse width modulation
+    ----param about noise
+    noise_added: enable/disable adding the random noise
+    snr_db: signal-to-noise ratio in dB, = 20*log10(1 / stdev of noise)
+    '''
+    t = np.linspace(0, duration, int(f_s*duration), endpoint=False)
+    
+    if carrier_waveform == 'triangle':
+        carrier = signal.sawtooth(2*np.pi*f_c*t + phase_shift, width=0.5)
+    elif carrier_waveform == 'square':
+        carrier = signal.square(2*np.pi*f_c*t + phase_shift)
+    else:            
+        carrier = np.sin(2*np.pi*f_c*t + phase_shift)        
+    
+    
+    envelope_am = np.ones(len(t))
+    if am_applied == True:
+        if envelope_waveform == 'square':
+            baseband = mod_index * signal.square(2*np.pi*f_m*t)
+        else:
+            baseband = mod_index * np.sin(2*np.pi*f_m*t)
+    
+        envelope_am = (1 + baseband) * 1/(1 + mod_index) # re-scaled to maintain unit amplitude
+        sig = carrier * envelope_am          
+    else:
+        sig = carrier
+        
+    
+    envelope_pwm = np.ones(len(t))
+    if pwm_applied == True:
+        envelope_pwm = 0.5 * (signal.square(2*np.pi*f_p*t, duty=duty_cycle) + 1) # should be in the range [0, 1]
+        
+        sig = sig * envelope_pwm
+    else:
+        sig = sig  
+    
+    
+    if noise_added == True:
+        one_sigma = 10**(-1*snr_db/20)
+        noise = np.clip(one_sigma*np.random.randn(len(t)), -3.0*one_sigma, 3.0*one_sigma)  # 1-sigma definition used, 3-sigma clamp applied
+        sig = sig + noise
+
+        
+    return t, sig, envelope_am, envelope_pwm, carrier
