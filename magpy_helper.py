@@ -540,8 +540,8 @@ def mimic_magpy_probe_with_sensor_avg_simplified(field, grid_mm, probe_center_lo
     
 # derive the envelope of the time-domain signal with moving averaging, from Shihao
 def compute_moving_average(input_data, window_size = 12000):
-    # compute mvg output
-    input_data = np.abs(input_data)
+    # compute moving averaging output
+    input_data = np.abs(input_data) # absolute values adopted because we are targeting for signal envelope
     n = window_size
     ret = np.cumsum(input_data, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
@@ -553,6 +553,27 @@ def compute_moving_average(input_data, window_size = 12000):
     output = np.concatenate((head, output))
     output = np.concatenate((output, tail))
     return output
+
+def compute_moving_average_rms(input_data, window_size):
+    '''
+    valid for calculating the time-averaged fields, according to DASY implementation (i.e., input data zero padded at start)
+    each averaged data point is calculated based on the corresponding input data point and a specified amount (window_size-1) of historical data
+    '''
+    data_sq = input_data**2
+
+    # Pad with zeros for initial windows
+    data_padded = np.pad(data_sq, (window_size, 0), mode='constant')
+    
+    # Cumulative sum
+    cumsum = np.cumsum(data_padded)
+
+    # Use cumsum to get moving window sums (difference between endpoints)
+    moving_sum = cumsum[window_size:] - cumsum[:-window_size]
+    moving_avg = moving_sum / window_size
+    
+    output = np.sqrt(moving_avg)
+    
+    return output  
 
 # calculate the minimum size of the slice of the time-domain signal, from Shihao
 # default min_cycles set to 5, corresponding to the implementation of MAGPy handheld V2.0 and Module WPT V2.0
