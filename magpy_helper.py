@@ -565,7 +565,7 @@ def compute_moving_average_rms(input_data, window_size):
     data_padded = np.pad(data_sq, (window_size, 0), mode='constant')
     
     # Cumulative sum
-    cumsum = np.cumsum(data_padded)
+    cumsum = np.cumsum(data_padded, dtype=float) # necessary to specify the data type
 
     # Use cumsum to get moving window sums (difference between endpoints)
     moving_sum = cumsum[window_size:] - cumsum[:-window_size]
