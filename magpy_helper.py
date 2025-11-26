@@ -780,7 +780,7 @@ def generate_modulated_signal(f_s=25e6, duration=6e-3, f_c=39.5e3, carrier_wavef
     duty_cycle: duty cycle of the pulse width modulation
     ----param about noise
     noise_added: enable/disable adding the random noise
-    snr_db: signal-to-noise ratio in dB, = 20*log10(1 / stdev of noise)
+    snr_db: signal-to-noise ratio in dB, = 20*log10(1 / (3*stdev of noise)), agreeing well with SNR derived from 99th percentile of the spectrum
     '''
     t = np.linspace(0, duration, int(f_s*duration), endpoint=False)
     
@@ -815,7 +815,7 @@ def generate_modulated_signal(f_s=25e6, duration=6e-3, f_c=39.5e3, carrier_wavef
     
     
     if noise_added == True:
-        one_sigma = 10**(-1*snr_db/20)
+        one_sigma = 10**(-1*snr_db/20) / 3 # SNR corresponds to broadband noise floor, which equals 3*one_sigma
         noise = np.clip(one_sigma*np.random.randn(len(t)), -3.0*one_sigma, 3.0*one_sigma)  # 1-sigma definition used, 3-sigma clamp applied
         sig = sig + noise
 
