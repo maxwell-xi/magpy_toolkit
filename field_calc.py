@@ -7,7 +7,7 @@ def calc_associated_legendre_func(n_max=20_000):
     return A_cache
     
 
-def calc_hfield_r_component_fast(r, theta, a, n_max=20_000, A_cache=A_cache):
+def calc_hfield_r_component_fast(r, theta, a, A_cache, n_max=20_000):
     """
     Faster version of calc_hfield_r_component.
     Uses:
@@ -81,7 +81,7 @@ def calc_hfield_r_component_fast(r, theta, a, n_max=20_000, A_cache=A_cache):
     return hfield_r
 
 
-def calc_hfield_theta_component_fast(r, theta, a, n_max=20_000, A_cache=A_cache):
+def calc_hfield_theta_component_fast(r, theta, a, A_cache, n_max=20_000):
     r_rel = r / a
 
     if r_rel < 1 - 1e-3 / a:
