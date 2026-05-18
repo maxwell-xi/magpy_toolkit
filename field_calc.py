@@ -143,7 +143,7 @@ def calc_hfield_theta_component_fast(r, theta, a, A_cache, n_max=20_000):
     hfield_theta = -1.0 / (2.0 * a) * h_sum
     return hfield_theta     
 
-def hfield_for_circular_coil_in_spherical_coordinate(dout, din, num_of_turns, r, theta, n_max=20_000):
+def hfield_for_circular_coil_in_spherical_coordinate(dout, din, num_of_turns, r, theta, A_cache, n_max=20_000):
     if (num_of_turns == 1) or (dout == din):
         a_range = [dout/2]
     else:
@@ -152,8 +152,8 @@ def hfield_for_circular_coil_in_spherical_coordinate(dout, din, num_of_turns, r,
     h_r_list = []
     h_theta_list = []
     for a in a_range:     
-        h_r_0 = calc_hfield_r_component_fast(r, theta, a, n_max)
-        h_theta_0 = calc_hfield_theta_component_fast(r, theta, a, n_max)
+        h_r_0 = calc_hfield_r_component_fast(r, theta, a, A_cache, n_max)
+        h_theta_0 = calc_hfield_theta_component_fast(r, theta, a, A_cache, n_max)
         h_r_list.append(h_r_0)
         h_theta_list.append(h_theta_0)
     
@@ -163,7 +163,7 @@ def hfield_for_circular_coil_in_spherical_coordinate(dout, din, num_of_turns, r,
         
     return h_r, h_theta, h_tot  
 
-def hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z, n_max=20_000):
+def hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z, A_cache, n_max=20_000):
     if (num_of_turns == 1) or (dout == din):
         a_range = [dout/2]
     else:
@@ -177,8 +177,8 @@ def hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x,
     h_y_list = []
     h_z_list = []
     for a in a_range:
-        h_r_0 = calc_hfield_r_component_fast(r, theta, a, n_max)
-        h_theta_0 = calc_hfield_theta_component_fast(r, theta, a, n_max)
+        h_r_0 = calc_hfield_r_component_fast(r, theta, a, A_cache, n_max)
+        h_theta_0 = calc_hfield_theta_component_fast(r, theta, a, A_cache, n_max)
         h_x_0 = (h_r_0*np.sin(theta) - h_theta_0*np.cos(theta)) * np.cos(phi) # use "-" for correct derivation of x component
         h_y_0 = (h_r_0*np.sin(theta) - h_theta_0*np.cos(theta)) * np.sin(phi) # use "-" for correct derivation of y component
         h_z_0 = h_r_0*np.cos(theta) + h_theta_0*np.sin(theta) # use "+" for correct derivation of z component
@@ -207,7 +207,7 @@ def fix_nan_value_by_interpolation(x, y):
     
     return y
 
-def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, n_max=20_000):
+def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, A_cache, n_max=20_000):
     h_x = []
     h_y = []
     h_z = []
@@ -215,7 +215,7 @@ def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, n_max=
     
     if isinstance(x, (list, np.ndarray)):    
         for x_0 in x:
-            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x_0, y, z, n_max)
+            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x_0, y, z, A_cache, n_max)
             h_x.append(h_x_0)
             h_y.append(h_y_0)
             h_z.append(h_z_0)
@@ -227,7 +227,7 @@ def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, n_max=
         h_tot = fix_nan_value_by_interpolation(x, h_tot) 
     elif isinstance(y, (list, np.ndarray)): 
         for y_0 in y:
-            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y_0, z, n_max)
+            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y_0, z, A_cache, n_max)
             h_x.append(h_x_0)
             h_y.append(h_y_0)
             h_z.append(h_z_0)
@@ -239,7 +239,7 @@ def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, n_max=
         h_tot = fix_nan_value_by_interpolation(y, h_tot) 
     elif isinstance(z, (list, np.ndarray)):
         for z_0 in z:
-            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z_0, n_max)
+            h_x_0, h_y_0, h_z_0, h_tot_0 = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z_0, A_cache, n_max)
             h_x.append(h_x_0)
             h_y.append(h_y_0)
             h_z.append(h_z_0)
@@ -250,7 +250,7 @@ def hfield_for_circular_coil_along_line(dout, din, num_of_turns, x, y, z, n_max=
         h_z = fix_nan_value_by_interpolation(z, h_z)
         h_tot = fix_nan_value_by_interpolation(z, h_tot)   
     else:
-        h_x, h_y, h_z, h_tot = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z, n_max)
+        h_x, h_y, h_z, h_tot = hfield_for_circular_coil_in_cartesian_coordinate(dout, din, num_of_turns, x, y, z, A_cache, n_max)
     
     return h_x, h_y, h_z, h_tot
 
