@@ -273,3 +273,77 @@ def field_decay_extent(r, h, decay_threshold_db=-20):
         e1 = np.abs(r[idx] - r[np.argmax(h)])
     
     return e0, e1   
+
+def hfield_for_single_turn_circular_coil_along_coil_axis(r, a):
+    """
+    exact solution for the vertical axis of a single-turn circular coil
+    r: radial distance in spherical coordinate system
+    a: coil radius
+    """
+    r_rel = r/a
+    return 1/(2*a)/(r_rel**2+1)**1.5
+
+def normalized_gradient_for_single_turn_circular_coil_along_coil_axis(r, a):
+    """
+    exact solution for the vertical axis of a single-turn circular coil
+    r: radial distance in spherical coordinate system
+    a: coil radius
+    """
+    return 3*r/(r**2+a**2)
+
+def hfield_for_two_parallel_wires_zoriented(s, x, y):
+    """
+    two z-oriented wires located on (0, -s/2, 0) and (0, s/2, 0) respectively
+    s: separation between two wires
+    x, y: coordinates of observation point
+    output for unit current
+    ref.: IEC 62226-2-1:2004
+    """
+    A = x**2 + (y-s/2)**2
+    B = x**2 + (y+s/2)**2
+    
+    h_x = -1/(2*np.pi) * ((s/2-y)/A + (s/2+y)/B)
+    h_y = -1/(2*np.pi) * (x/A - x/B)
+    
+    h_tot = np.sqrt(h_x**2 + h_y**2)
+    
+    return h_x, h_y, h_tot
+
+def hfield_for_two_parallel_wires_yoriented(s, x, z):
+    """
+    two y-oriented wires located on (-s/2, 0, 0) and (s/2, 0, 0) respectively
+    s: separation between two wires
+    x, y: coordinates of observation point
+    output for unit current
+    ref.: IEC 62226-2-1:2004
+    """
+    A = z**2 + (x-s/2)**2
+    B = z**2 + (x+s/2)**2
+    
+    h_z = -1/(2*np.pi) * ((s/2-x)/A + (s/2+x)/B)
+    h_x = -1/(2*np.pi) * (z/A - z/B)
+    
+    h_tot = np.sqrt(h_z**2 + h_x**2)
+    
+    return h_x, h_z, h_tot
+
+def hfield_for_two_parallel_wires_inplane(s, r):
+    """
+    s: separation between two wires
+    r: distance relative to the closest wire
+    only valid for observation points in the same plane as the two wires
+    only the H-field component perpendicular to the plane formed by the two wires exists
+    ref.: Ilaria et al., Novel method and procedure for evaluating compliance of sources..., Trans. EMC, 2019
+    """
+    r_rel = r/s
+    h = 1/(2*np.pi*s)/(r_rel**2+r_rel)
+    return h
+
+def normalized_gradient_for_two_parallel_wires_inplane(s, r):
+    """
+    s: separation between two wires
+    r: distance relative to the closest wire
+    only valid for H-field in the same plane as the two wires
+    ref.: Ilaria et al., Novel method and procedure for evaluating compliance of sources..., Trans. EMC, 2019
+    """
+    return (2*r + s) / (r**2 + r*s)
