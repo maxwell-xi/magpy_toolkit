@@ -76,6 +76,8 @@ def icnirp1998_hinc(f, exposure_scenario='public'):
             hinc = 5
         elif f > 0.15e6 and f <= 10e6:
             hinc = 0.73 / (f*1e-6)
+        elif f > 10e6 and f <= 400e6:
+            hinc = 0.073
         else:
             hinc = float('nan')
     else:
@@ -89,6 +91,8 @@ def icnirp1998_hinc(f, exposure_scenario='public'):
             hinc = 24.4
         elif f > 65e3 and f <=10e6:
             hinc = 1.6 / (f*1e-6)
+        elif f > 10e6 and f <= 400e6:
+            hinc = 0.16
         else:
             hinc = float('nan')
     
@@ -106,6 +110,8 @@ def icnirp1998_einc(f, exposure_scenario='public'):
             einc  = 87
         elif f > 1e6 and f <=10e6:
             einc = 87 / (np.sqrt(f*1e-6))
+        elif f > 10e6 and f <= 400e6:
+            einc = 28
         else:
             einc = float('nan')
     else:
@@ -119,6 +125,8 @@ def icnirp1998_einc(f, exposure_scenario='public'):
             einc = 610
         elif f > 1e6 and f <= 10e6:
             einc = 610 / (f*1e-6)
+        elif f > 10e6 and f <= 400e6:
+            einc = 61
         else:
             einc = float('nan')
     
@@ -126,21 +134,21 @@ def icnirp1998_einc(f, exposure_scenario='public'):
 
 def icnirp1998_hinc_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [0, 1, 8, 25, 0.8e3, 150e3, 10e6]
-        hinc = [3.2e4, 3.2e4, 500, 160, 5, 5, 0.073]            
+        f = [0, 1, 8, 25, 0.8e3, 150e3, 10e6, 400e6]
+        hinc = [3.2e4, 3.2e4, 500, 160, 5, 5, 0.073, 0.073]            
     else:
-        f = [0, 1, 8, 25, 0.82e3, 65e3, 10e6]
-        hinc = [1.63e5, 1.63e5, 2.5e3, 800, 24.4, 24.4, 0.16]
+        f = [0, 1, 8, 25, 0.82e3, 65e3, 10e6, 400e6]
+        hinc = [1.63e5, 1.63e5, 2.5e3, 800, 24.4, 24.4, 0.16, 0.16]
     
     return f, hinc
 
 def icnirp1998_einc_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [1, 25, 3e3, 1e6, 10e6]
-        einc = [1e4, 1e4, 87, 87, 28]            
+        f = [1, 25, 3e3, 1e6, 10e6, 400e6]
+        einc = [1e4, 1e4, 87, 87, 28, 28]            
     else:
-        f = [1, 25, 0.82e3, 1e6, 10e6]
-        einc = [2e4, 2e4, 610, 610, 61]
+        f = [1, 25, 0.82e3, 1e6, 10e6, 400e6]
+        einc = [2e4, 2e4, 610, 610, 61, 28]
     
     return f, einc
 
@@ -558,6 +566,7 @@ def ieee2019_eind_trace(exposure_scenario='public', body_part='brain'):
     return f, eind           
 
 # source: tables 2 and 3
+# applicable frequencies: 0 Hz - 5 MHz
 def ieee2019_hinc_stimulation(f, exposure_scenario='public', body_part='head_and_trunk'):
     if exposure_scenario == 'public':
         if body_part == 'head_and_trunk':
@@ -608,7 +617,8 @@ def ieee2019_hinc_stimulation(f, exposure_scenario='public', body_part='head_and
                 
     return hinc
 
-# source: table 4
+# source: table 4 (whole-body exposure)
+# applicable frequencies: 0 Hz - 100 kHz
 def ieee2019_einc_stimulation(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
         if f <= 368:
@@ -631,12 +641,60 @@ def ieee2019_einc_stimulation(f, exposure_scenario='public'):
     
     return einc
         
+
+# source: tables 7 and 8 (whole-body exposure)
+# applicable frequencies: 100 kHz - 400 MHz
+def ieee2019_hinc_thermal_wb(f, exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        if f >= 0.1e6 and f <= 30e6:
+            hinc = 16.3 / (f*1e-6)
+        elif f > 30e6 and f <= 100e6:
+            hinc = 158.3 / (f*1e-6)**1.668
+        else:
+            hinc = float('nan')
+    else:
+        if f >= 0.1e6 and f <= 100e6:
+            hinc = 16.3 / (f*1e-6)
+        else:
+            hinc = float('nan')
     
-# source: tables 9 and 10
+    return hinc
+
+# applicable frequencies: 100 kHz - 400 MHz
+def ieee2019_einc_thermal_wb(f, exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        if f < 0.1e6:
+            einc = float('nan')
+        elif f <= 1.34e6:
+            einc = 614
+        elif f < 30e6:
+            einc = 823.8 / (f*1e-6)
+        elif f <= 400e6:
+            einc = 27.5
+        else:
+            einc = float('nan')
+    else:
+        if f < 0.1e6:
+            einc = float('nan')
+        elif f <= 1e6:
+            einc = 1842
+        elif f < 30e6:
+            einc = 1842 / (f*1e-6)
+        elif f <= 400e6:
+            einc = 61.4
+        else:
+            einc = float('nan')
+    
+    return einc
+
+# source: tables 9 and 10 (local exposure)
+# applicable frequencies: 100 kHz - 400 MHz
 def ieee2019_hinc_thermal(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
         if f >= 0.1e6 and f <= 30e6:
             hinc = 36.4 / (f*1e-6)
+        elif f > 30e6 and f <= 100e6:
+            hinc = 353 / (f*1e-6)**1.668
         else:
             hinc = float('nan')
     else:
@@ -647,6 +705,7 @@ def ieee2019_hinc_thermal(f, exposure_scenario='public'):
     
     return hinc
 
+# applicable frequencies: 100 kHz - 400 MHz
 def ieee2019_einc_thermal(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
         if f < 0.1e6:
@@ -700,11 +759,31 @@ def ieee2019_einc_stimulation_trace(exposure_scenario='public'):
         einc = [2e4, 2e4, 2e4, 1842, 1842]
     
     return f, einc
+
+def ieee2019_hinc_thermal_trace_wb(exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        f = [0.1e6, 30e6, 100e6]
+        hinc = [16.3/0.1, 16.3/30, 158.3/100**1.668]
+    else:
+        f = [0.1e6, 100e6]
+        hinc = [16.3/0.1, 16.3/100]
     
+    return f, hinc
+
+def ieee2019_einc_thermal_trace_wb(exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        f = [0.1e6, 1.34e6, 30e6, 400e6]
+        einc = [614, 614, 27.5, 27.5]
+    else:
+        f = [0.1e6, 1e6, 30e6, 400e6]
+        einc = [1842, 1842, 61.4, 61.4]
+    
+    return f, einc
+   
 def ieee2019_hinc_thermal_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [0.1e6, 30e6]
-        hinc = [36.4/0.1, 36.4/30]
+        f = [0.1e6, 30e6, 100e6]
+        hinc = [36.4/0.1, 36.4/30, 353/100**1.668]
     else:
         f = [0.1e6, 100e6]
         hinc = [36.4/0.1, 36.4/100]
@@ -779,30 +858,46 @@ def sc6_einc_stimulation(f, exposure_scenario='public'):
             einc = float('nan')
     return einc
 
-# source: table 4
+# source: tables 4, 5, 6
 def sc6_hinc_thermal(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
         if f >= 100e3 and f <= 10e6:
             hinc = 0.73 / (f*1e-6)
+        elif f > 10e6 and f <= 20e6:
+            hinc = 0.728
+        elif f > 20e6 and f <= 48e6:
+            hinc = 0.1540 / (f*1e-6)**0.25
         else:
             hinc = float('nan')
     else:
         if f >= 100e3 and f <= 10e6:
             hinc = 1.6 / (f*1e-6)
+        elif f > 10e6 and f <= 20e6:
+            hinc = 0.163
+        elif f > 20e6 and f <= 48e6:
+            hinc = 0.3444 / (f*1e-6)**0.25
         else:
             hinc = float('nan')
     return hinc
 
-# source: table 3
+# source: tables 3, 5, 6
 def sc6_einc_thermal(f, exposure_scenario='public'):
     if exposure_scenario == 'public':
         if f >= 1.1e6 and f <= 10e6:
             einc = 87 / (f*1e-6)**0.5
+        elif f > 10e6 and f <= 20e6:
+            einc = 27.46
+        elif f > 20e6 and f <= 48e6:
+            einc = 58.07 / (f*1e-6)**0.25
         else:
             einc = float('nan')
     else:
         if f >= 1.29e6 and f <= 10e6:
             einc = 193 / (f*1e-6)**0.5
+        elif f > 10e6 and f <= 20e6:
+            einc = 61.4
+        elif f > 20e6 and f <= 48e6:
+            einc = 129.8 / (f*1e-6)**0.25
         else:
             einc = float('nan')
     return einc
@@ -829,21 +924,21 @@ def sc6_einc_stimulation_trace(exposure_scenario='public'):
 
 def sc6_hinc_thermal_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [0.1e6, 10e6]
-        hinc = [7.3, 0.073]
+        f = [0.1e6, 10e6, 20e6, 48e6]
+        hinc = [7.3, 0.073, 0.073, 0.1540/48**0.25]
     else:
-        f = [0.1e6, 10e6]
-        hinc = [16, 0.16]
+        f = [0.1e6, 10e6, 20e6, 48e6]
+        hinc = [16, 0.16, 0.16, 0.3444/48**0.25]
     
     return f, hinc
 
 def sc6_einc_thermal_trace(exposure_scenario='public'):
     if exposure_scenario == 'public':
-        f = [1.1e6, 10e6]
-        einc = [83, 28]
+        f = [1.1e6, 10e6, 20e6, 48e6]
+        einc = [83, 27.5, 27.5, 58.07/48**0.25]
     else:
-        f = [1.29e6, 10e6]
-        einc = [170, 61]
+        f = [1.29e6, 10e6, 20e6, 48e6]
+        einc = [170, 61.4, 61.4, 129.8/48**0.25]
     
     return f, einc
 
