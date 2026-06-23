@@ -392,6 +392,44 @@ def icnirp2020_einc_stimulation(f, exposure_scenario='public'):
         
     return einc
 
+# source: Table 5 (whole-body exposure)
+# applicable frequencies: 100 kHz - 2 GHz
+def icnirp2020_hinc_thermal_wb(f, exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        if f < 100e3:
+            hinc = float('nan')
+        elif f >= 100e3 and f <= 30e6:
+            hinc = 2.2 / (f*1e-6)
+        else:
+            hinc = float('nan')
+    else:
+        if f < 100e3:
+            hinc = float('nan')
+        elif f >= 100e3 and f <= 30e6:
+            hinc = 4.9 / (f*1e-6)
+        else:
+            hinc = float('nan')
+    
+    return hinc
+
+def icnirp2020_einc_thermal_wb(f, exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        if f < 100e3:
+            einc = float('nan')
+        elif f >= 100e3 and f <= 30e6:
+            einc = 300 / (f*1e-6)**0.7
+        else:
+            einc = float('nan')
+    else:
+        if f < 100e3:
+            einc = float('nan')
+        elif f >= 100e3 and f <= 30e6:
+            einc = 660 / (f*1e-6)**0.7
+        else:
+            einc = float('nan')
+    
+    return einc
+
 # source: Table 6 (local exposure)
 # applicable frequencies: 100 kHz - 2 GHz
 def icnirp2020_hinc_thermal(f, exposure_scenario='public'):
@@ -448,6 +486,26 @@ def icnirp2020_einc_stimulation_trace(exposure_scenario='public'):
         f = [100e3, 10e6]
         einc = [170, 170]
         
+    return f, einc
+
+def icnirp2020_hinc_thermal_trace_wb(exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        f = [100e3, 30e6]
+        hinc = [2.2/(100e3*1e-6), 2.2/(30e6*1e-6)]
+    else:
+        f = [100e3, 30e6]
+        hinc = [4.9/(100e3*1e-6), 4.9/(30e6*1e-6)]
+    
+    return f, hinc
+
+def icnirp2020_einc_thermal_trace_wb(exposure_scenario='public'):
+    if exposure_scenario == 'public':
+        f = [100e3, 30e6]
+        einc = [300/(100e3*1e-6)**0.7, 300/(30e6*1e-6)**0.7]
+    else:
+        f = [100e3, 30e6]
+        einc = [660/(100e3*1e-6)**0.7, 660/(30e6*1e-6)**0.7]
+    
     return f, einc
 
 def icnirp2020_hinc_thermal_trace(exposure_scenario='public'):
